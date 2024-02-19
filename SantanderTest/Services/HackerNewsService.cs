@@ -23,7 +23,7 @@ public sealed class HackerNewsService(HttpClient httpClient, IMemoryCache cache,
 
         foreach (var id in ids.Take(top))
         {
-            stories.Add(GetStoryAsync(id, cancellationToken));
+            stories.Add(Task.Run(() => GetStoryAsync(id, cancellationToken)));
         }
 
         return await Task.WhenAll(stories);
