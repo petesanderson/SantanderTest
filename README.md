@@ -15,3 +15,6 @@ Apologies for the edit, I was under the weather yesterday (fine excuse) and forg
 1. I assumed that IDs returned from the `/v0/beststories.json` API are ordered (descending) by their associated story's score. I did check a number of random the stories, they appeared to be in the aforementioned order.
 2. I also made a mistake here, I forgot to perform a not-null check on the result of the call to the `/v0/beststories.json` API; in the case of a null result, appropriate action should've been taken.
 3. A further enhancement that I would make would be to send the logs to a remote logging service/repo.
+
+# Edit - 20/02/24 (2)
+I've made changes under the commit `Fixes` to perform error handling when calling the Hacker News API. I realise that this is somewhat cheeky, but I couldn't ignore the mistake I'd made and felt I had to show you how I'd correct it.
