@@ -8,10 +8,25 @@ public sealed class HackerNewsService(HttpClient httpClient, IMemoryCache cache,
 {
     public void Dispose() => httpClient.Dispose();
 
-    public async Task<IEnumerable<StoryResponse?>> GetBestStoriesAsync(int top, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<StoryResponse?>?> GetBestStoriesAsync(int top, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Retrieving best stories");
-        var ids = await httpClient.GetFromJsonAsync<List<int>>("/v0/beststories.json", cancellationToken);
+        List<int>? ids;
+
+        try
+        {
+            ids = await httpClient.GetFromJsonAsync<List<int>>("/v0/beststories.json", cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Could not retrieve best stories");
+            return null;
+        }
+
+        if (ids is null)
+        {
+            return Enumerable.Empty<StoryResponse>();
+        }
 
         if (top > ids!.Count)
         {
@@ -38,13 +53,19 @@ public sealed class HackerNewsService(HttpClient httpClient, IMemoryCache cache,
         else
         {
             logger.LogInformation("{ID} not found in cache; retrieving from API", id);
-            var story = await httpClient.GetFromJsonAsync<Story>($"/v0/item/{id}.json", cancellationToken);
+            Story? story;
 
-            if (story is null)
+            try
             {
-                logger.LogInformation("Could not retrieve {ID} from API", id);
+                story = await httpClient.GetFromJsonAsync<Story>($"/v0/item/{id}.json", cancellationToken);
             }
-            else
+            catch (HttpRequestException ex)
+            {
+                logger.LogError(ex, "Could not retrieve {ID} from API", id);
+                return null;
+            }
+
+            if (story is not null)
             {
                 logger.LogInformation("Adding {ID} to cache", id);
                 storyResponse = new StoryResponse(story.Title, story.Url, story.By, story.Time.ToDateTime(), story.Score, story.Kids.Count);
